@@ -9,11 +9,9 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "users_tbl")
-public class User {
+@Table(name = "users")
+public class UserEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private String phoneNumber;
-    private String pin
-            ;
+    private String pin;
 }
