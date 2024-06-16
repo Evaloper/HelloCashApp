@@ -1,4 +1,4 @@
-package com.helloCash.helloCash.service;
+package com.helloCash.helloCash.integration;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 

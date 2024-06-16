@@ -1,8 +1,8 @@
 package com.helloCash.helloCash.service;
 
 
+import com.helloCash.helloCash.integration.BankIntegrationService;
 import com.helloCash.helloCash.model.UserEntity;
-import com.helloCash.helloCash.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +16,7 @@ public class RequestProcessor {
     private BankIntegrationService bankIntegrationService;
 
     @Autowired
-    private UserRepository userRepository;
+    private UserService userService;
 
     private Map<String, String> userStates = new HashMap<>();
 
@@ -35,7 +35,7 @@ public class RequestProcessor {
             }
         } else if (userStates.get(phoneNumber) != null && userStates.get(phoneNumber).equals("AWAITING_PIN")) {
             if (parts[1].matches("\\d{4}")) {
-                userRepository.save(new UserEntity(phoneNumber, parts[1]));
+                userService.saveUser(new UserEntity(phoneNumber, parts[1]));
                 userStates.remove(phoneNumber);
                 return "User activated successfully.";
             } else {
