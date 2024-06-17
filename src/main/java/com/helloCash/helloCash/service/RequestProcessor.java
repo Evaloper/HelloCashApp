@@ -25,7 +25,7 @@ public class RequestProcessor {
         String phoneNumber = parts[0];
         String action = parts.length > 1 ? parts[1].toUpperCase() : "";
 
-        if (action.equals("ACTIVATE")) {
+        if (action.equals("ACT")) {
             boolean isValid = bankIntegrationService.validatePhoneNumberWithBank(phoneNumber);
             if (isValid) {
                 userStates.put(phoneNumber, "AWAITING_PIN");
