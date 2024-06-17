@@ -29,6 +29,7 @@ public class SocketService implements Runnable {
                 try (Socket clientSocket = serverSocket.accept();
                      BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                      PrintWriter out = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()), true)) {
+                    out.println("Type your registered phone number:ACT e.g \"08012345678:ACT\" to Validate Phone number" );
 
                     String inputLine;
                     String phoneNumber = null;
