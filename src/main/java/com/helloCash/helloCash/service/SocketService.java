@@ -18,7 +18,7 @@ public class SocketService implements Runnable {
     @Autowired
     private RequestProcessor requestProcessor;
 
-    private Map<String, String> activationState = new HashMap<>();
+    private final Map<String, String> activationState = new HashMap<>();
 
     @Override
     public void run() {
@@ -27,8 +27,8 @@ public class SocketService implements Runnable {
 
             while (true) {
                 try (Socket clientSocket = serverSocket.accept();
-                     BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                     PrintWriter out = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()), true)) {
+                     BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream())); //Reads input from client
+                     PrintWriter out = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()), true)) { // Writes to client
                     out.println("Type your registered phone number:ACT e.g \"08012345678:ACT\" to Validate Phone number" );
 
                     String inputLine;
