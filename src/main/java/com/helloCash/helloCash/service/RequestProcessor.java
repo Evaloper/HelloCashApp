@@ -3,6 +3,7 @@ package com.helloCash.helloCash.service;
 
 import com.helloCash.helloCash.integration.BankIntegrationService;
 import com.helloCash.helloCash.model.UserEntity;
+import com.helloCash.helloCash.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +19,9 @@ public class RequestProcessor {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private UserRepository userRepository;
+
     private Map<String, String> userStates = new HashMap<>();
 
     public String processRequest(String request) {
@@ -26,6 +30,12 @@ public class RequestProcessor {
         String action = parts.length > 1 ? parts[1].toUpperCase() : "";
 
         if (action.equals("ACT")) {
+            // Check if the user already exists
+            UserEntity existingUser = userRepository.findByPhoneNumber(phoneNumber);
+            if (existingUser != null) {
+                return "User already activated. Please select an option: \n1. Transfer \n2. Check Balance \n3. Buy Airtime or Data";
+            }
+
             boolean isValid = bankIntegrationService.validatePhoneNumberWithBank(phoneNumber);
             if (isValid) {
                 userStates.put(phoneNumber, "AWAITING_PIN");

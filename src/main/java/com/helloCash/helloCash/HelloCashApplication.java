@@ -7,21 +7,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class HelloCashApplication implements CommandLineRunner {
-
-	private final SocketService socketService;
-
-	@Autowired
-	public HelloCashApplication(SocketService socketService) {
-		this.socketService = socketService;
-	}
+public class HelloCashApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(HelloCashApplication.class, args);
 	}
 
-	@Override
-	public void run(String... args) {
-		new Thread(socketService).start();
-	}
 }
