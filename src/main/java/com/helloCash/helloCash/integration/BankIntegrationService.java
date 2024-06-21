@@ -16,7 +16,7 @@ public class BankIntegrationService {
     }
 
     public boolean validatePhoneNumberWithBank(String phoneNumber) {
-        String url = "http://localhost:8080/api/v1/user/check-phone?phoneNumber=" + phoneNumber;
+        String url = "http://localhost:3246/api/v1/user/check-phone?phoneNumber=" + phoneNumber;
         try {
             String response = restTemplate.getForObject(url, String.class);
             System.out.println("Bank API response: " + response); // Print the response for debugging
@@ -28,7 +28,7 @@ public class BankIntegrationService {
     }
 
     public NameAccountResponse getAccountDetails(String phoneNumber) {
-        String url = "http://localhost:8080/api/v1/user/name-enquiry-account/" + phoneNumber;
+        String url = "http://localhost:3246/api/v1/user/name-account-enquiry/" + phoneNumber;
         try {
             NameAccountResponse response = restTemplate.getForObject(url, NameAccountResponse.class);
             System.out.println("Account Details API response: " + response); // Print the response for debugging
