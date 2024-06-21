@@ -18,7 +18,7 @@ public class SocketService implements Runnable {
     @Autowired
     private RequestProcessor requestProcessor;
 
-    private final Map<String, String> activationState = new HashMap<>();
+    private Map<String, String> activationState = new HashMap<>();
 
     @Override
     public void run() {
@@ -27,9 +27,9 @@ public class SocketService implements Runnable {
 
             while (true) {
                 try (Socket clientSocket = serverSocket.accept();
-                     BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream())); //Reads input from client
-                     PrintWriter out = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()), true)) { // Writes to client
-                    out.println("Type your registered phone number:ACT e.g \"08012345678:ACT\" to Validate Phone number" );
+                     BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                     PrintWriter out = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()), true)) {
+                    out.println("Type your registered phone number:ACT e.g \"08012345678:ACT:PIN\" to Validate Phone number and set pin");
 
                     String inputLine;
                     String phoneNumber = null;
@@ -37,27 +37,17 @@ public class SocketService implements Runnable {
                     while ((inputLine = in.readLine()) != null) {
                         System.out.println("Received: " + inputLine);
 
-                        if (activationState.containsKey(phoneNumber)) {
-                            // Process the PIN input
-                            String response = requestProcessor.processRequest(phoneNumber + ":" + inputLine);
+                        String response = requestProcessor.processRequest(inputLine);
+                        if (response.contains("Welcome") || response.contains("User already activated")) {
+//                            response += "\nMenu:\n1. Transfer\n2. Check balance\n3. Buy airtime or data";
                             out.println(response);
-                            if (response.contains("User activated successfully.")) {
-                                activationState.remove(phoneNumber);
-                                out.println("Menu:");
-                                out.println("1. Transfer");
-                                out.println("2. Check balance");
-                                out.println("3. Buy airtime or data");
-                                // Continue to listen for further commands
+
+                            while ((inputLine = in.readLine()) != null) {
+                                String menuResponse = requestProcessor.processRequest(phoneNumber + ":" + inputLine);
+                                out.println(menuResponse);
                             }
                         } else {
-                            // Process the initial activation command
-                            String[] parts = inputLine.split(":");
-                            phoneNumber = parts[0];
-                            String response = requestProcessor.processRequest(inputLine);
                             out.println(response);
-                            if (response.contains("Please enter your 4-digit PIN:")) {
-                                activationState.put(phoneNumber, "awaiting_pin");
-                            }
                         }
                     }
 
