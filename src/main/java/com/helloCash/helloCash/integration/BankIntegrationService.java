@@ -2,7 +2,6 @@ package com.helloCash.helloCash.integration;
 
 //import com.helloCash.helloCash.model.EnquiryRequest;
 //import com.helloCash.helloCash.model.NameAccountResponse;
-import com.helloCash.helloCash.model.EnquiryRequest;
 import com.helloCash.helloCash.model.NameAccountResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
