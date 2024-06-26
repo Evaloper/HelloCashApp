@@ -37,17 +37,25 @@ public class SocketService implements Runnable {
                     while ((inputLine = in.readLine()) != null) {
                         System.out.println("Received: " + inputLine);
 
-                        String response = requestProcessor.processRequest(inputLine);
-                        if (response.contains("Welcome") || response.contains("User already activated")) {
-//                            response += "\nMenu:\n1. Transfer\n2. Check balance\n3. Buy airtime or data";
-                            out.println(response);
+                        if (phoneNumber == null) {
+                            phoneNumber = inputLine.split(":")[0];
+                        }
 
+                        String response = requestProcessor.processRequest(inputLine);
+                        out.println(response);
+
+                        if (response.contains("Please select an option")) {
                             while ((inputLine = in.readLine()) != null) {
                                 String menuResponse = requestProcessor.processRequest(phoneNumber + ":" + inputLine);
                                 out.println(menuResponse);
+                                if (menuResponse.contains("Please select an option")) {
+                                    break;
+                                }
                             }
-                        } else {
-                            out.println(response);
+                        } else if (response.contains("Enter your PIN to confirm the transfer")) {
+                            inputLine = in.readLine();
+                            String confirmationResponse = requestProcessor.processRequest(phoneNumber + ":" + inputLine);
+                            out.println(confirmationResponse);
                         }
                     }
 

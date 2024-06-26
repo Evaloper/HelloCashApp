@@ -1,12 +1,10 @@
-package com.helloCash.helloCash.model;
-
+package com.helloCash.helloCash.payload.response;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class SmsRequest {
+public class SmsResponse {
     private String phoneNumber;
     private String message;
 }
-

@@ -1,6 +1,8 @@
-package com.helloCash.helloCash.model;
+package com.helloCash.helloCash.payload.response;
 
 import lombok.*;
+
+import java.math.BigDecimal;
 
 @Data
 @Builder
@@ -12,4 +14,5 @@ public class NameAccountResponse {
     private String firstName;
     private String lastName;
     private String accountNumber;
+    private BigDecimal accountBalance;
 }
