@@ -8,6 +8,8 @@ import java.net.Socket;
 
 public class SocketClient {
 
+    private static boolean sessionActive = false;
+
     public static void main(String[] args) {
         String hostName = "localhost";
         int portNumber = 8082;
@@ -23,11 +25,13 @@ public class SocketClient {
             while ((fromServer = in.readLine()) != null) {
                 System.out.println(fromServer);
 
-
-                if (fromServer.contains("Type your registered phone number:ACT e.g \"08012345678:ACT:PIN\" to Validate Phone number and set pin")) {
-                    fromUser = stdIn.readLine();
-                    if (fromUser != null) {
-                        out.println(fromUser);
+                if (!sessionActive) {
+                    if (fromServer.contains("Type your registered phone number:ACT e.g \"08012345678:ACT:PIN\" to Validate Phone number and set pin")) {
+                        fromUser = stdIn.readLine();
+                        if (fromUser != null) {
+                            out.println(fromUser);
+                            sessionActive = true;
+                        }
                     }
                 } else if (fromServer.contains("Menu:")) {
                     System.out.println(fromServer);
@@ -38,6 +42,11 @@ public class SocketClient {
                         if (fromUser != null) {
                             System.out.println("Sending to server: " + fromUser);
                             out.println(fromUser);
+
+                            if (fromUser.equalsIgnoreCase("exit")) {
+                                sessionActive = false;
+                                break;
+                            }
                         }
                     }
                 } else {
@@ -47,6 +56,11 @@ public class SocketClient {
                     if (fromUser != null) {
                         System.out.println("Sending to server: " + fromUser);
                         out.println(fromUser);
+
+                        if (fromUser.equalsIgnoreCase("exit")) {
+                            sessionActive = false;
+                            break;
+                        }
                     }
                 }
             }
