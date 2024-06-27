@@ -18,7 +18,12 @@ public class TwilioService {
     private String fromPhoneNumber;
 
     public void sendSms(String toPhoneNumber, String message) {
-        Twilio.init(accountSid, authToken);
-        Message.creator(new PhoneNumber(toPhoneNumber), new PhoneNumber(fromPhoneNumber), message).create();
+        try {
+            Twilio.init(accountSid, authToken);
+            Message sentMessage = Message.creator(new PhoneNumber(toPhoneNumber), new PhoneNumber(fromPhoneNumber), message).create();
+            System.out.println("SMS sent successfully: " + sentMessage.getSid());
+        } catch (Exception e) {
+            System.err.println("Error sending SMS: " + e.getMessage());
+        }
     }
 }
