@@ -48,11 +48,11 @@ public class SocketService implements Runnable {
                             while ((inputLine = in.readLine()) != null) {
                                 String menuResponse = requestProcessor.processRequest(phoneNumber + ":" + inputLine);
                                 out.println(menuResponse);
-                                if (menuResponse.contains("Please select an option")) {
-                                    break;
-                                }
+//                                if (menuResponse.contains("Please select an option") || menuResponse.contains("Type MENU")) {
+//                                    break;
+//                                }
                             }
-                        } else if (response.contains("Enter your PIN to confirm the transfer")) {
+                        } else if (response.contains("Please confirm by typing your PIN")) {
                             inputLine = in.readLine();
                             String confirmationResponse = requestProcessor.processRequest(phoneNumber + ":" + inputLine);
                             out.println(confirmationResponse);

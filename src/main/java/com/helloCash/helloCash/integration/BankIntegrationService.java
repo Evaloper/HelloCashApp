@@ -156,5 +156,45 @@ public class BankIntegrationService {
         }
     }
 
+    public boolean buyAirtimeForSelf(BigDecimal amount, String phoneNumber) {
+        NameAccountResponse accountDetails = getAccountDetails(phoneNumber);
+        if (accountDetails == null || accountDetails.getAccountNumber() == null) {
+            return false;
+        }
 
+        Map<String, Object> airtimeRequest = new HashMap<>();
+        airtimeRequest.put("accountNumber", accountDetails.getAccountNumber());
+        airtimeRequest.put("phoneNumber", phoneNumber);
+        airtimeRequest.put("amount", amount);
+
+        String url = minibankUrl + "/buy-airtime";
+        try {
+            restTemplate.postForObject(url, airtimeRequest, String.class);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean buyAirtimeForOthers(String sourcePhoneNumber, String destinationPhoneNumber, BigDecimal amount) {
+        NameAccountResponse accountDetails = getAccountDetails(sourcePhoneNumber);
+        if (accountDetails == null || accountDetails.getAccountNumber() == null) {
+            return false;
+        }
+
+        Map<String, Object> airtimeRequest = new HashMap<>();
+        airtimeRequest.put("accountNumber", accountDetails.getAccountNumber());
+        airtimeRequest.put("phoneNumber", destinationPhoneNumber);
+        airtimeRequest.put("amount", amount);
+
+        String url = minibankUrl + "/buy-airtime";
+        try {
+            restTemplate.postForObject(url, airtimeRequest, String.class);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }
