@@ -27,20 +27,21 @@ public class SocketClient {
 
                 if (!sessionActive) {
                     if (fromServer.contains("Type your registered phone number:ACT e.g \"08012345678:ACT:PIN\" to Validate Phone number and set pin")) {
+                        System.out.print("Client: ");
                         fromUser = stdIn.readLine();
                         if (fromUser != null) {
                             out.println(fromUser);
                             sessionActive = true;
                         }
                     }
-                } else if (fromServer.contains("Menu:")) {
+                } else if (fromServer.contains("0:")) {
                     System.out.println(fromServer);
                     while ((fromServer = in.readLine()) != null) {
                         System.out.println(fromServer);
                         System.out.print("Client: ");
                         fromUser = stdIn.readLine();
                         if (fromUser != null) {
-                            System.out.println("Sending to server: " + fromUser);
+//                            System.out.println("Sending to server: " + fromUser);
                             out.println(fromUser);
 
                             if (fromUser.equalsIgnoreCase("exit")) {
@@ -54,7 +55,7 @@ public class SocketClient {
                     System.out.print("Client: ");
                     fromUser = stdIn.readLine();
                     if (fromUser != null) {
-                        System.out.println("Sending to server: " + fromUser);
+//                        System.out.println("Sending to server: " + fromUser);
                         out.println(fromUser);
 
                         if (fromUser.equalsIgnoreCase("exit")) {

@@ -63,10 +63,10 @@ public class BankIntegrationService {
             System.out.println("Account Details API response: " + response.getBody()); // Print the response for debugging
 
             NameAccountResponse accountDetails = response.getBody();
-            String message = "Welcome " + accountDetails.getFirstName() + " " + accountDetails.getLastName() +
+            String message = "Welcome " + accountDetails.getFirstName() + " " + accountDetails.getLastName() + " " + accountDetails.getOtherName() +
                     ". Your HelloCash app has been activated successfully. Here is your REFS account number " +
                     accountDetails.getAccountNumber() + " \n Please select an option: \n1. Transfer \n2. Check balance \n3. Buy airtime or data";
-//            twilioService.sendSms(phoneNumber, message);
+            twilioService.sendSms(phoneNumber, message);
 
             return accountDetails;
         } catch (Exception e) {
@@ -74,7 +74,7 @@ public class BankIntegrationService {
             e.printStackTrace(); // Add stack trace for more detailed debugging
 
             String errorMessage = "Error fetching account details. Please try again later.";
-            return new NameAccountResponse("Error", "Unable to fetch account details.", null, null, null, null);
+            return new NameAccountResponse("Error", "Unable to fetch account details.", null, null, null, null, null);
         }
     }
 
@@ -98,7 +98,7 @@ public class BankIntegrationService {
             String accountNum = accountInfoNode.path("accountNumber").asText();
 
             String balanceMessage = "Hello " + accountName + ", your account balance is: " + accountBalance.toString();
-//            twilioService.sendSms(phoneNumber, balanceMessage);
+            twilioService.sendSms(phoneNumber, balanceMessage);
 
             return new AccountInfo(accountName, accountBalance, accountNum);
         } catch (Exception e) {
