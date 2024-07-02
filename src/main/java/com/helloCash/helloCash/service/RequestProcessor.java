@@ -53,15 +53,15 @@ public class RequestProcessor {
         logger.info("Processing request: " + request + " for phone number: " + phoneNumber);
         logger.info("Current state: " + userStates.getOrDefault(phoneNumber, "None"));
 
-        if (action.equals("CANCEL")) {
-            return handleCancelCommand(phoneNumber);
-        }
+//        if (action.equals("9")) {
+//            return handleCancelCommand(phoneNumber);
+//        }
 
         if (action.equals("ACT") && parts.length == 3) {
             return handleActivation(parts, phoneNumber);
-        } else if (action.equals("CANCEL")) {
+        } else if (action.equals("9")) {
             return handleCancelCommand(phoneNumber);
-        } else if (action.equals("MENU")) {
+        } else if (action.equals("0")) {
             return handleMenu(phoneNumber);
         } else if (userStates.containsKey(phoneNumber)) {
             return handleUserStates(phoneNumber, action, parts);
@@ -89,7 +89,7 @@ public class RequestProcessor {
             NameAccountResponse accountDetails = bankIntegrationService.getAccountDetails(phoneNumber);
             userStates.put(phoneNumber, "AWAITING_MENU");
             lastActivatedPhoneNumber = phoneNumber; // Track the last activated phone number
-            return "Welcome " + accountDetails.getFirstName() + " " + accountDetails.getLastName() +
+            return "Welcome " + accountDetails.getFirstName() + " " + accountDetails.getLastName() + " " + accountDetails.getOtherName() +
                     ". Your HelloCash app has been activated successfully. Here is your account number " +
                     accountDetails.getAccountNumber() + " to your chosen bank. You can now select an option: 1. Transfer 2. Check Balance 3. Buy Airtime or Data";
         } else {
@@ -107,7 +107,7 @@ public class RequestProcessor {
     private String handleUserStates(String phoneNumber, String action, String[] parts) {
         switch (userStates.get(phoneNumber)) {
             case "MENU_TEXT":
-                return "Type 'Menu' to continue with other transactions.";
+                return "Type \"0\" to return to the main menu";
             case "AWAITING_MENU":
                 return handleMenuSelection(phoneNumber, action);
             case "TRANSFER_INITIATED":
@@ -126,12 +126,12 @@ public class RequestProcessor {
         switch (action) {
             case "1":
                 userStates.put(phoneNumber, "TRANSFER_INITIATED");
-                return "Enter the destination account number and amount separated by a comma, e.g., accountNumber,amount";
+                return "Enter the destination account number and amount separated by a comma, e.g., accountNumber,amount. Type \"0\" to go back to main menu or type 9 to cancel.";
             case "2":
                 return handleCheckBalance(phoneNumber);
             case "3":
                 userStates.put(phoneNumber, "AIRTIME_INITIATED");
-                return "Enter the phone number to top-up and amount separated by a comma, e.g., phoneNumber,amount";
+                return "Enter the phone number to top-up and amount separated by a comma, e.g., phoneNumber,amount. Type \"0\" to go back to main menu or type 9 to cancel.";
             default:
                 return "Invalid option. Please select an option: 1. Transfer 2. Check Balance 3. Buy Airtime or Data";
         }
@@ -145,13 +145,13 @@ public class RequestProcessor {
 
         String accountNumber = accountDetails.getAccountNumber();
         BigDecimal balance = bankIntegrationService.getBalance(accountNumber, phoneNumber).getAccountBalance();
-        return "Your current balance is: " + balance + " .Type Menu and follow the prompt to continue the session or type exit to exit the session";
+        return "Your current balance is: " + balance + " . Type \"0\" to return to the main menu";
     }
 
     private String handleBuyAirtime(String phoneNumber, String action) {
         String[] details = action.split(",");
         if (details.length != 2) {
-            return "Invalid format. Please enter the phone number and amount separated by a comma.";
+            return "Invalid format. Please enter the phone number and amount separated by a comma. Type \"0\" to go back to main menu or type 9 to cancel.";
         }
 
 //        phoneNumber = details[0];
@@ -160,22 +160,22 @@ public class RequestProcessor {
 
         UserEntity user = userRepository.findByPhoneNumber(phoneNumber);
         if (user == null || !passwordEncoder.matches(pin, user.getPin())) {
-            return "Invalid PIN. Airtime purchase cancelled.";
+            return "Invalid PIN. Airtime purchase cancelled. Type \"0\" to go back to main menu.";
         }
 
         boolean success = bankIntegrationService.buyAirtimeForSelf(amount, pin);
         if (success) {
             userStates.put(phoneNumber, "AWAITING_MENU");
-            return "Airtime purchased successfully for " + phoneNumber + ". Type MENU to return to the main menu.";
+            return "Airtime purchased successfully for " + phoneNumber + ". Type \"0\"  to return to the main menu.";
         } else {
-            return "Airtime purchase failed. Please try again.";
+            return "Airtime purchase failed. Please try again. Type \"0\" to go back to main menu.";
         }
     }
 
     private String handleTransfer(String phoneNumber, String action) {
         String[] details = action.split(",");
         if (details.length != 2) {
-            return "Invalid format. Please enter the destination account number and amount separated by a comma.";
+            return "Invalid format. Please enter the destination account number and amount separated by a comma. Type \"0\" to go back to main menu or type 9 to cancel";
         }
 
         String destinationAccountNumber = details[0];
@@ -189,7 +189,7 @@ public class RequestProcessor {
         transferDetails.put(phoneNumber, destinationAccountNumber + "," + amount);
         userStates.put(phoneNumber, "TRANSFER_CONFIRM");
 
-        return "You are about to transfer " + amount + " to account " + destinationAccountDetails.getFirstName() + " " + destinationAccountDetails.getLastName() + ". Please confirm by typing your PIN.";
+        return "You are about to transfer " + amount + " to account " + destinationAccountDetails.getFirstName() + " " + destinationAccountDetails.getLastName() + ". Please confirm by typing your PIN or type 9 to cancel.";
     }
 
     private String confirmTransfer(String phoneNumber, String pin) {
@@ -208,9 +208,9 @@ public class RequestProcessor {
         if (success) {
             transferDetails.remove(phoneNumber);
             userStates.put(phoneNumber, "AWAITING_MENU");
-            return "Transfer successful. Type MENU to return to the main menu.";
+            return "Transfer successful. Type \"0\" to return to the main menu.";
         } else {
-            return "Transfer failed. Please try again.";
+            return "Transfer failed. Please try again. Type \"0\" to go back to main menu.";
         }
     }
 
@@ -220,25 +220,25 @@ public class RequestProcessor {
             case "TRANSFER_INITIATED":
                 transferDetails.remove(phoneNumber);
                 userStates.put(phoneNumber, "MENU_TEXT");
-                return "Transfer initiation cancelled. Type 'Menu' to continue with other transactions.";
+                return "Transfer initiation cancelled. Type \"0\" to return to the main menu";
 
             case "TRANSFER_CONFIRM":
                 transferDetails.remove(phoneNumber);
                 userStates.put(phoneNumber, "MENU_TEXT");
-                return "Transfer confirmation cancelled. Type 'Menu' to continue with other transactions.";
+                return "Transfer confirmation cancelled. Type \"0\" to return to the main menu";
 
             case "BUY_AIRTIME_INITIATED":
                 transferDetails.remove(phoneNumber);
                 userStates.put(phoneNumber, "AWAITING_MENU");
-                return "Airtime purchase cancelled. Type 'Menu' to continue with other transactions.";
+                return "Airtime purchase cancelled. Type \"0\" to return to the main menu";
 
             case "BUY_DATA_INITIATED":
                 transferDetails.remove(phoneNumber);
                 userStates.put(phoneNumber, "AWAITING_MENU");
-                return "Data purchase cancelled. Type 'Menu' to continue with other transactions.";
+                return "Data purchase cancelled. Type \"0\" to return to the main menu";
 
             default:
-                return "There is no ongoing transaction to cancel.";
+                return "There is no ongoing transaction to cancel. Type \"0\" to return to the main menu";
         }
     }
 
