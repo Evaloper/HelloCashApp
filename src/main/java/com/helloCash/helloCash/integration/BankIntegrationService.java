@@ -29,7 +29,7 @@ public class BankIntegrationService {
 
     private final RestTemplateConfig restTemplate;
 
-    private final TwilioService twilioService;
+//    private final TwilioService twilioService;
 
     private final String minibankUrl = "http://localhost:3246/api/v1/user";
 
@@ -67,7 +67,7 @@ public class BankIntegrationService {
             String message = "Welcome " + accountDetails.getFirstName() + " " + accountDetails.getLastName() + " " + accountDetails.getOtherName() +
                     ". Your HelloCash app has been activated successfully. Here is your REFS account number " +
                     accountDetails.getAccountNumber() + " \n Please select an option: \n1. Transfer \n2. Check balance \n3. Buy airtime or data";
-            twilioService.sendSms(phoneNumber, message);
+//            twilioService.sendSms(phoneNumber, message);
 
             return accountDetails;
         } catch (Exception e) {
@@ -99,7 +99,7 @@ public class BankIntegrationService {
             String accountNum = accountInfoNode.path("accountNumber").asText();
 
             String balanceMessage = "Hello " + accountName + ", your account balance is: " + accountBalance.toString();
-            twilioService.sendSms(phoneNumber, balanceMessage);
+//            twilioService.sendSms(phoneNumber, balanceMessage);
 
             return new AccountInfo(accountName, accountBalance, accountNum);
         } catch (Exception e) {
