@@ -2,6 +2,7 @@ package com.helloCash.helloCash.integration;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.helloCash.helloCash.config.RestTemplateConfig;
 import com.helloCash.helloCash.payload.response.NameAccountResponse;
 import com.helloCash.helloCash.payload.response.AccountInfo;
 //import com.helloCash.helloCash.service.TwilioService;
@@ -26,7 +27,7 @@ public class BankIntegrationService {
     @Value("${api.key}")
     private String apiKey;
 
-    private final RestTemplate restTemplate;
+    private final RestTemplateConfig restTemplate;
 
     private final TwilioService twilioService;
 
@@ -40,7 +41,7 @@ public class BankIntegrationService {
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
         try {
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+            ResponseEntity<String> response = restTemplate.restTemplate().exchange(url, HttpMethod.GET, entity, String.class);
             System.out.println("Bank API response: " + response.getBody()); // Print the response for debugging
             boolean isValid = Boolean.parseBoolean(response.getBody().trim());
             return isValid;
@@ -59,7 +60,7 @@ public class BankIntegrationService {
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
         try {
-            ResponseEntity<NameAccountResponse> response = restTemplate.exchange(url, HttpMethod.GET, entity, NameAccountResponse.class);
+            ResponseEntity<NameAccountResponse> response = restTemplate.restTemplate().exchange(url, HttpMethod.GET, entity, NameAccountResponse.class);
             System.out.println("Account Details API response: " + response.getBody()); // Print the response for debugging
 
             NameAccountResponse accountDetails = response.getBody();
@@ -86,7 +87,7 @@ public class BankIntegrationService {
             headers.set("API-Key", "helloCash-api-key");
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+            ResponseEntity<String> response = restTemplate.restTemplate().exchange(url, HttpMethod.GET, entity, String.class);
             System.out.println("Balance API response: " + response.getBody());
 
             ObjectMapper objectMapper = new ObjectMapper();
@@ -126,7 +127,7 @@ public class BankIntegrationService {
             // Log the request body
             System.out.println("Transfer Request Body: " + requestBody.toString());
 
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+            ResponseEntity<String> response = restTemplate.restTemplate().exchange(url, HttpMethod.POST, entity, String.class);
 
             // Log the response
             System.out.println("Transfer API response: " + response.getBody());
@@ -147,7 +148,7 @@ public class BankIntegrationService {
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
         try {
-            ResponseEntity<NameAccountResponse> response = restTemplate.exchange(url, HttpMethod.GET, entity, NameAccountResponse.class);
+            ResponseEntity<NameAccountResponse> response = restTemplate.restTemplate().exchange(url, HttpMethod.GET, entity, NameAccountResponse.class);
             return response.getBody();
         } catch (Exception e) {
             System.err.println("Error fetching name details: " + e.getMessage());
@@ -169,7 +170,7 @@ public class BankIntegrationService {
 
         String url = minibankUrl + "/buy-airtime";
         try {
-            restTemplate.postForObject(url, airtimeRequest, String.class);
+            restTemplate.restTemplate().postForObject(url, airtimeRequest, String.class);
             return true;
         } catch (Exception e) {
             e.printStackTrace();
@@ -190,7 +191,7 @@ public class BankIntegrationService {
 
         String url = minibankUrl + "/buy-airtime";
         try {
-            restTemplate.postForObject(url, airtimeRequest, String.class);
+            restTemplate.restTemplate().postForObject(url, airtimeRequest, String.class);
             return true;
         } catch (Exception e) {
             e.printStackTrace();

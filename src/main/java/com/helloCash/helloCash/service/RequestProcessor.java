@@ -15,7 +15,6 @@ import java.util.logging.Logger;
 
 import static java.lang.System.out;
 
-
 @Service
 public class RequestProcessor {
 
@@ -23,7 +22,13 @@ public class RequestProcessor {
     private BankIntegrationService bankIntegrationService;
 
     @Autowired
+    private PayStackService paystackService;
+
+    @Autowired
     private UserService userService;
+
+    @Autowired
+    private BankService bankService;
 
     @Autowired
     private UserRepository userRepository;
@@ -78,7 +83,7 @@ public class RequestProcessor {
         if (existingUser != null) {
             userStates.put(phoneNumber, "AWAITING_MENU");
             lastActivatedPhoneNumber = phoneNumber; // Track the last activated phone number
-            return "User already activated. Please select an option: 1. Transfer 2. Check Balance 3. Buy Airtime or Data";
+            return "User already activated. Please select an option: 1. Transfer to REF's Bank 2. Transfer to Other Banks 3. Check Balance 4. Buy Airtime or Data";
         }
 
         boolean isValid = bankIntegrationService.validatePhoneNumberWithBank(phoneNumber);
@@ -91,7 +96,7 @@ public class RequestProcessor {
             lastActivatedPhoneNumber = phoneNumber; // Track the last activated phone number
             return "Welcome " + accountDetails.getFirstName() + " " + accountDetails.getLastName() + " " + accountDetails.getOtherName() +
                     ". Your HelloCash app has been activated successfully. Here is your account number " +
-                    accountDetails.getAccountNumber() + " to your chosen bank. You can now select an option: 1. Transfer 2. Check Balance 3. Buy Airtime or Data";
+                    accountDetails.getAccountNumber() + " to your chosen bank. You can now select an option: 1. Transfer to REF's Bank 2. Transfer to Other Banks 3. Check Balance 4. Buy Airtime or Data";
         } else {
             return "Phone number not registered with bank.";
         }
@@ -100,7 +105,7 @@ public class RequestProcessor {
 
     private String handleMenu(String phoneNumber) {
         userStates.put(phoneNumber, "AWAITING_MENU");
-        return "Please select an option: 1. Transfer 2. Check Balance 3. Buy Airtime or Data";
+        return "Please select an option: 1. Transfer to REF's Bank 2. Transfer to Other Banks 3. Check Balance 4. Buy Airtime or Data";
     }
 
 
@@ -114,6 +119,10 @@ public class RequestProcessor {
                 return handleTransfer(phoneNumber, action);
             case "TRANSFER_CONFIRM":
                 return confirmTransfer(phoneNumber, action);
+            case "TRANSFER_TO_OTHER_BANK_INITIATED":
+                return handleTransferToOtherBank(phoneNumber, action);
+            case "TRANSFER_TO_OTHER_BANK_CONFIRM":
+                return confirmTransferToOtherBank(phoneNumber, action);
             case "AIRTIME_INITIATED":
                 return handleBuyAirtime(phoneNumber, action);
             default:
@@ -128,12 +137,15 @@ public class RequestProcessor {
                 userStates.put(phoneNumber, "TRANSFER_INITIATED");
                 return "Enter the destination account number and amount separated by a comma, e.g., accountNumber,amount. Type \"0\" to go back to main menu or type 9 to cancel.";
             case "2":
-                return handleCheckBalance(phoneNumber);
+                userStates.put(phoneNumber, "TRANSFER_TO_OTHER_BANK_INITIATED");
+                return "Enter the destination bank name, account number, and amount separated by commas, e.g., bankName,accountNumber,amount. Type \"0\" to go back to main menu or type 9 to cancel.";
             case "3":
+                return handleCheckBalance(phoneNumber);
+            case "4":
                 userStates.put(phoneNumber, "AIRTIME_INITIATED");
                 return "Enter the phone number to top-up and amount separated by a comma, e.g., phoneNumber,amount. Type \"0\" to go back to main menu or type 9 to cancel.";
             default:
-                return "Invalid option. Please select an option: 1. Transfer 2. Check Balance 3. Buy Airtime or Data";
+                return "Invalid option. Please select an option: 1. Transfer to REF's Bank 2. Transfer to Other Banks 3. Check Balance 4. Buy Airtime or Data";
         }
     }
 
@@ -193,11 +205,13 @@ public class RequestProcessor {
     }
 
     private String confirmTransfer(String phoneNumber, String pin) {
+
         UserEntity user = userRepository.findByPhoneNumber(phoneNumber);
         if (user == null || !passwordEncoder.matches(pin, user.getPin())) {
             userStates.put(phoneNumber, "AWAITING_MENU");
-            return "Invalid PIN. Transfer cancelled. Please select an option: 1. Transfer 2. Check Balance 3. Buy Airtime or Data";
+            return "Invalid PIN. Transfer cancelled. Please select an option: 1. Transfer to REF's Bank 2. Transfer to Other Banks 3. Check Balance 4. Buy Airtime or Data";
         }
+
 
         String[] details = transferDetails.get(phoneNumber).split(",");
         String sourceAccountNumber = bankIntegrationService.getAccountDetails(phoneNumber).getAccountNumber();
@@ -212,6 +226,52 @@ public class RequestProcessor {
         } else {
             return "Transfer failed. Please try again. Type \"0\" to go back to main menu.";
         }
+    }
+
+    private String handleTransferToOtherBank(String phoneNumber, String action) {
+        String[] details = action.split(",");
+        if (details.length != 3) {
+            return "Invalid format. Please enter the destination bank name, account number, and amount separated by commas. Type \"0\" to go back to main menu or type 9 to cancel";
+        }
+
+        String bankName = details[0];
+        String destinationAccountNumber = details[1];
+        BigDecimal amount = new BigDecimal(details[2]);
+
+        if (!bankService.isValidBankName(bankName)) {
+            return "Invalid bank name. Please try again.";
+        }
+
+        String recipientName = paystackService.getRecipientName(destinationAccountNumber, bankName);
+        if (recipientName == null) {
+            return "Invalid destination account number. Please try again.";
+        }
+
+        transferDetails.put(phoneNumber, bankName + "," + destinationAccountNumber + "," + amount);
+        userStates.put(phoneNumber, "TRANSFER_TO_OTHER_BANK_CONFIRM");
+
+        return "You are about to transfer " + amount + " to " + recipientName + " (" + bankName + "). Please confirm by typing your PIN or type 9 to cancel.";
+    }
+
+    private String confirmTransferToOtherBank(String phoneNumber, String pin) {
+        UserEntity user = userRepository.findByPhoneNumber(phoneNumber);
+        if (user == null || !passwordEncoder.matches(pin, user.getPin())) {
+            userStates.put(phoneNumber, "AWAITING_MENU");
+            return "Invalid PIN. Transfer cancelled. Please select an option: 1. Transfer 2. Check Balance 3. Buy Airtime or Data 4. Transfer to Other Bank";
+        }
+
+        String[] details = transferDetails.get(phoneNumber).split(",");
+        String bankName = details[0];
+        String destinationAccountNumber = details[1];
+        BigDecimal amount = new BigDecimal(details[2]);
+
+        String recipientCode = paystackService.createTransferRecipient(destinationAccountNumber, bankName);
+        String result = paystackService.initiateTransfer(recipientCode, amount.intValue());
+
+        transferDetails.remove(phoneNumber);
+        userStates.put(phoneNumber, "AWAITING_MENU");
+
+        return result + " Type \"0\" to return to the main menu.";
     }
 
     private String handleCancelCommand(String phoneNumber) {
@@ -236,6 +296,16 @@ public class RequestProcessor {
                 transferDetails.remove(phoneNumber);
                 userStates.put(phoneNumber, "AWAITING_MENU");
                 return "Data purchase cancelled. Type \"0\" to return to the main menu";
+
+            case "TRANSFER_TO_OTHER_BANK_INITIATED":
+                transferDetails.remove(phoneNumber);
+                userStates.put(phoneNumber, "AWAITING_MENU");
+                return "Transfer to other bank initiation cancelled. Type \"0\" to return to the main menu";
+
+            case "TRANSFER_TO_OTHER_BANK_CONFIRM":
+                transferDetails.remove(phoneNumber);
+                userStates.put(phoneNumber, "AWAITING_MENU");
+                return "Transfer to other bank confirmation cancelled. Type \"0\" to return to the main menu";
 
             default:
                 return "There is no ongoing transaction to cancel. Type \"0\" to return to the main menu";
