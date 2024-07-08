@@ -10,7 +10,9 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Service
 public class SocketService implements Runnable {
@@ -19,6 +21,7 @@ public class SocketService implements Runnable {
     private RequestProcessor requestProcessor;
 
     private Map<String, String> activationState = new HashMap<>();
+    private final List<PrintWriter> clientWriters = new CopyOnWriteArrayList<>();
 
     @Override
     public void run() {
@@ -30,6 +33,7 @@ public class SocketService implements Runnable {
                      BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                      PrintWriter out = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()), true)) {
                     out.println("Type your registered phone number:ACT e.g \"08012345678:ACT:PIN\" to Validate Phone number and set pin");
+                    clientWriters.add(out);
 
                     String inputLine;
                     String phoneNumber = null;
@@ -65,6 +69,11 @@ public class SocketService implements Runnable {
             }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+    public void broadcastMessage(String message) {
+        for (PrintWriter writer : clientWriters) {
+            writer.println(message);
         }
     }
 }
